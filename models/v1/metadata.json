@@ -1,0 +1,6 @@
+{
+    "threshold": 0.99,
+    "model_type": "XGBClassifier",
+    "target": "isFraud",
+    "random_state": 42
+}

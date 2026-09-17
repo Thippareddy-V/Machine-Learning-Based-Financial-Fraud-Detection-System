@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FraudShield AI — Intelligent Transaction Risk Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L20 5.5V11C20 16.05 16.68 20.44 12 22C7.32 20.44 4 16.05 4 11V5.5L12 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M8.5 11.8L10.7 14L15.5 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="brand__text">FraudShield <span class="brand__ai">AI</span></span>
+    </div>
+    <div class="status-pill" id="apiStatusPill">
+      <span class="status-pill__dot" id="apiStatusDot"></span>
+      <span id="apiStatusLabel">Ready</span>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+
+  <section class="hero">
+    <div class="hero__inner">
+      <h1 class="hero__title">Detect suspicious transactions<br />before they become losses.</h1>
+      <p class="hero__desc">
+        Every submitted transaction is scored by an XGBoost classifier trained on transfer
+        patterns, account balances, and behavioral signals — returning a calibrated
+        fraud probability in real time.
+      </p>
+      <div class="hero__meta">
+        <span class="hero__meta-item"><strong>Model</strong> XGBoost classifier</span>
+        <span class="hero__meta-divider"></span>
+        <span class="hero__meta-item"><strong>Decision threshold</strong> 99.00%</span>
+        <span class="hero__meta-divider"></span>
+        <span class="hero__meta-item"><strong>Endpoint</strong> /predict</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="workspace">
+
+    <!-- LEFT: FORM -->
+    <div class="panel panel--form">
+      <div class="panel__header">
+        <h2>Transaction details</h2>
+        <p class="panel__subtitle">Fill in the fields below to run the model against this transaction.</p>
+      </div>
+
+      <form id="transactionForm" novalidate>
+
+        <fieldset class="field-group">
+          <legend>Transaction</legend>
+
+          <div class="field">
+            <label for="type">Transaction type</label>
+            <select id="type" name="type" required>
+              <option value="" disabled selected>Select a type</option>
+              <option value="PAYMENT">Payment</option>
+              <option value="TRANSFER">Transfer</option>
+              <option value="CASH_OUT">Cash out</option>
+              <option value="DEBIT">Debit</option>
+              <option value="CASH_IN">Cash in</option>
+            </select>
+            <span class="field__error" data-error-for="type"></span>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="amount">Amount</label>
+              <div class="field__prefix-wrap">
+                <span class="field__prefix">$</span>
+                <input type="number" id="amount" name="amount" min="0" step="0.01" placeholder="0.00" required />
+              </div>
+              <span class="field__error" data-error-for="amount"></span>
+            </div>
+
+            <div class="field">
+              <label for="step">Simulation step</label>
+              <input type="number" id="step" name="step" min="0" step="1" value="1" required />
+              <span class="field__hint">One step represents one hour of simulated time.</span>
+              <span class="field__error" data-error-for="step"></span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>Origin account</legend>
+
+          <div class="field">
+            <label for="nameOrig">Account ID <span class="field__optional">optional</span></label>
+            <input type="text" id="nameOrig" name="nameOrig" placeholder="unknown" autocomplete="off" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="oldbalanceOrg">Balance before</label>
+              <div class="field__prefix-wrap">
+                <span class="field__prefix">$</span>
+                <input type="number" id="oldbalanceOrg" name="oldbalanceOrg" min="0" step="0.01" placeholder="0.00" required />
+              </div>
+              <span class="field__error" data-error-for="oldbalanceOrg"></span>
+            </div>
+
+            <div class="field">
+              <label for="newbalanceOrig">Balance after</label>
+              <div class="field__prefix-wrap">
+                <span class="field__prefix">$</span>
+                <input type="number" id="newbalanceOrig" name="newbalanceOrig" min="0" step="0.01" placeholder="0.00" required />
+              </div>
+              <span class="field__error" data-error-for="newbalanceOrig"></span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>Destination account</legend>
+
+          <div class="field">
+            <label for="nameDest">Account ID <span class="field__optional">optional</span></label>
+            <input type="text" id="nameDest" name="nameDest" placeholder="unknown" autocomplete="off" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="oldbalanceDest">Balance before</label>
+              <div class="field__prefix-wrap">
+                <span class="field__prefix">$</span>
+                <input type="number" id="oldbalanceDest" name="oldbalanceDest" min="0" step="0.01" placeholder="0.00" required />
+              </div>
+              <span class="field__error" data-error-for="oldbalanceDest"></span>
+            </div>
+
+            <div class="field">
+              <label for="newbalanceDest">Balance after</label>
+              <div class="field__prefix-wrap">
+                <span class="field__prefix">$</span>
+                <input type="number" id="newbalanceDest" name="newbalanceDest" min="0" step="0.01" placeholder="0.00" required />
+              </div>
+              <span class="field__error" data-error-for="newbalanceDest"></span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>Security</legend>
+
+          <div class="toggle-row">
+            <div class="toggle-row__text">
+              <span class="toggle-row__label">Previously flagged transaction</span>
+              <span class="toggle-row__hint">Mark this on if the transaction was already flagged by an upstream rule engine.</span>
+            </div>
+            <button type="button" class="toggle" id="flaggedToggle" role="switch" aria-checked="false" aria-labelledby="flaggedToggleLabel">
+              <span class="toggle__thumb"></span>
+            </button>
+            <input type="hidden" id="isFlaggedFraud" name="isFlaggedFraud" value="0" />
+          </div>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn--primary" id="submitBtn">
+            <span class="btn__label">Analyze transaction</span>
+            <span class="btn__spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- RIGHT: RESULT -->
+    <div class="panel panel--result">
+      <div class="panel__header">
+        <h2>Risk analysis</h2>
+        <p class="panel__subtitle" id="resultSubtitle">Run the model to see a live risk assessment.</p>
+      </div>
+
+      <div class="result" id="resultArea">
+
+        <!-- IDLE STATE -->
+        <div class="state state--dashboard state--idle" id="emptyState">
+          <div class="risk-score-card risk-score-card--neutral">
+            <span class="risk-score-card__eyebrow">Risk Score</span>
+            <div class="risk-score-card__body">
+              <div class="gauge-wrap gauge-wrap--compact">
+                <svg class="gauge" viewBox="0 0 200 200" width="156" height="156">
+                  <circle class="gauge__track" cx="100" cy="100" r="86" fill="none" stroke-width="12" />
+                  <circle class="gauge__value gauge__value--idle" cx="100" cy="100" r="86" fill="none" stroke-width="12" stroke-linecap="round" transform="rotate(-90 100 100)" />
+                </svg>
+                <div class="gauge__center">
+                  <span class="gauge__number">--</span>
+                  <span class="gauge__label">/ 100</span>
+                </div>
+              </div>
+              <div class="risk-score-card__summary">
+                <span class="risk-badge risk-badge--neutral">Awaiting transaction</span>
+                <p>Enter the transaction details and click Analyze Transaction to generate the fraud risk assessment.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <span>Model Fraud Probability</span>
+              <strong>--%</strong>
+            </div>
+            <div class="metric-card">
+              <span>Model Decision</span>
+              <strong>No prediction yet</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOADING STATE -->
+        <div class="state state--loading" id="loadingState" hidden>
+          <div class="loading-card">
+            <div class="loader" aria-hidden="true"></div>
+            <h3>Analyzing transaction...</h3>
+            <p>Running the transaction through the fraud detection model.</p>
+          </div>
+        </div>
+
+        <!-- ERROR STATE -->
+        <div class="state state--error" id="errorState" hidden>
+          <div class="error-card">
+            <div class="state__icon state__icon--error" aria-hidden="true">
+              <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M24 15V27" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <circle cx="24" cy="33" r="1.6" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3>Fraud Detection Service Unavailable</h3>
+            <p>Unable to connect to the prediction API. Make sure the FastAPI server is running.</p>
+            <button type="button" class="btn btn--ghost" id="retryBtn">Try Again</button>
+          </div>
+        </div>
+
+        <!-- RESULT STATE -->
+        <div class="state state--dashboard state--result" id="resultState" hidden>
+
+          <div class="risk-score-card" id="riskScoreCard">
+            <span class="risk-score-card__eyebrow">Fraud Risk Score</span>
+            <div class="gauge-wrap">
+              <svg class="gauge" viewBox="0 0 200 200" width="180" height="180">
+                <circle class="gauge__track" cx="100" cy="100" r="86" fill="none" stroke-width="12" />
+                <circle class="gauge__value" id="gaugeValue" cx="100" cy="100" r="86" fill="none" stroke-width="12" stroke-linecap="round" transform="rotate(-90 100 100)" />
+              </svg>
+              <div class="gauge__center">
+                <span class="gauge__number" id="gaugeNumber">0</span>
+                <span class="gauge__label">/ 100</span>
+              </div>
+            </div>
+            <span class="risk-badge" id="riskBadge">Awaiting transaction</span>
+            <p class="risk-score-card__message" id="riskMessage"></p>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric-card">
+              <span>Model Fraud Probability</span>
+              <strong id="statProbability">--%</strong>
+            </div>
+            <div class="metric-card">
+              <span>Decision Threshold</span>
+              <strong id="statThreshold">--%</strong>
+            </div>
+            <div class="metric-card">
+              <span>Model Decision</span>
+              <strong id="statPrediction">--</strong>
+            </div>
+          </div>
+
+          <div class="summary">
+            <h4>Transaction summary</h4>
+            <dl class="summary__list" id="summaryList"></dl>
+          </div>
+
+          <button type="button" class="btn btn--secondary" id="resetBtn">Analyze Another Transaction</button>
+
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>FraudShield AI is a decision-support tool. Predictions reflect a statistical model and should be reviewed alongside standard fraud procedures.</p>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>
