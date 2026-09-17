@@ -707,5 +707,6 @@ It combines machine learning knowledge with practical software engineering and d
 ---
 
 ## 📄 License
+MIT License
 
-Add the license appropriate for your repository before publishing the project.
+Copyright (c) 2026 Thippa Reddy
